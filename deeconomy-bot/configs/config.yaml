@@ -1,0 +1,63 @@
+bot:
+  debug: false
+  commands:
+    wallet:
+      name: "wallet"
+      desc: "View your wallet balance"
+    daily:
+      name: "daily"
+      desc: "Collect your dailies"
+    level:
+      name: "level"
+      desc: "View your level"
+    transfer:
+      name: "transfer"
+      desc: "Transfer money to selected user on this server. Commission is 5%"
+      options:
+        receiver:
+          name: "receiver"
+          desc: "The user who will get money"
+          required: true
+        amount:
+          name: "amount"
+          desc: "Amount of money you want to transfer"
+          required: true
+    transactions:
+      name: "transactions"
+      desc: "View your previous 3 transactions in this server"
+      options:
+        scope:
+          name: "scope"
+          desc: "Scope"
+          required: false
+          choices:
+            senderOnly:
+              name: "Sender only"
+              value: "senderOnly"
+            receiverOnly:
+              name: "Receiver only"
+              value: "receiverOnly"
+    add-xp:
+      name: "add-xp"
+      desc: "Add XP to a specified user in this server."
+      options:
+        user:
+          name: "user"
+          desc: "The user who will get XP"
+          required: true
+        xp:
+          name: "xp"
+          desc: "The count of XP that will be credited to the user"
+          required: true
+    add-money:
+      name: "add-money"
+      desc: "Add money to a specified user in this server."
+      options:
+        user:
+          name: "user"
+          desc: "The user who will get money"
+          required: true
+        amount:
+          name: "amount"
+          desc: "The count of money that will be credited to the user"
+          required: true
