@@ -2,6 +2,7 @@ package redisrepo
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -21,8 +22,34 @@ func (r *defaultRepo) Set(ctx context.Context, key string, value interface{}, tt
 	return r.rdb.Set(ctx, key, value, ttl).Err()
 }
 
+func (r *defaultRepo) SetJSON(ctx context.Context, key string, value interface{}, ttl time.Duration) error {
+	valueJSON, err := json.Marshal(value)
+	if err != nil {
+		return err
+	}
+
+	return r.rdb.Set(ctx, key, valueJSON, ttl).Err()
+}
+
 func (r *defaultRepo) Get(ctx context.Context, key string) *redis.StringCmd {
 	return r.rdb.Get(ctx, key)
+}
+
+func GetMany[T any](r *defaultRepo, ctx context.Context, key string) ([]*T, error) {
+	value, err := r.rdb.Get(ctx, key).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	var result []*T
+	if err := json.Unmarshal([]byte(value), &result); err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 func (r *defaultRepo) Del(ctx context.Context, keys ...string) *redis.IntCmd {

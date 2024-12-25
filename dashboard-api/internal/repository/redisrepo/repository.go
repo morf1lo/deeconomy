@@ -15,7 +15,7 @@ type Default interface {
 }
 
 type Guild interface {
-	Set(ctx context.Context, guildID string, guild *model.Guild, ttl time.Duration) error
+	Set(ctx context.Context, guild *model.Guild, ttl time.Duration) error
 	Get(ctx context.Context, guildID string) (*model.Guild, error)
 }
 

@@ -1,8 +1,6 @@
 package v1
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 	"github.com/morf1lo/deeconomy-bot-api/internal/service"
 	"go.uber.org/zap"
@@ -11,30 +9,24 @@ import (
 type Handler struct {
 	logger *zap.Logger
 	services *service.Service
-	httpClient *http.Client
 }
 
 func New(logger *zap.Logger, services *service.Service) *Handler {
 	return &Handler{
 		logger: logger,
 		services: services,
-		httpClient: &http.Client{},
 	}
 }
 
-func InitRoutes() {
+func (h *Handler) InitRoutes() {
 	r := gin.New()
 
 	v1 := r.Group("/api/v1")
 	{
-		users := v1.Group("/users")
+		oauth2 := v1.Group("/oauth2")
 		{
-			users.GET("/@me")
-		}
-
-		guilds := v1.Group("/guilds")
-		{
-			guilds.GET("")
+			oauth2.GET("/signin", h.oauth2SignIn)
+			oauth2.GET("/callback", h.oauth2Authorize)
 		}
 	}
 }

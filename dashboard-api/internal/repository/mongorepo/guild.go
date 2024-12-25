@@ -5,6 +5,7 @@ import (
 
 	"github.com/morf1lo/deeconomy-bot-api/internal/model"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -18,9 +19,15 @@ func newGuildRepo(db *mongo.Database) Guild {
 	}
 }
 
-func (r *guildRepo) Create(ctx context.Context, guild *model.Guild) error {
+func (r *guildRepo) Create(ctx context.Context, guild *model.Guild) (*model.Guild, error) {
+	guild.ID = primitive.NewObjectID()
+	
 	_, err := r.guildsCollection.InsertOne(ctx, guild)
-	return err
+	if err != nil {
+		return nil, err
+	}
+
+	return guild, nil
 }
 
 func (r *guildRepo) FindByGuildID(ctx context.Context, guildID string) (*model.Guild, error) {
@@ -35,4 +42,3 @@ func (r *guildRepo) FindByGuildID(ctx context.Context, guildID string) (*model.G
 
 	return &guild, nil
 }
-

@@ -19,13 +19,13 @@ func newGuildRepo(rdb *redis.Client) Guild {
 	}
 }
 
-func (r *guildRepo) Set(ctx context.Context, guildID string, guild *model.Guild, ttl time.Duration) error {
+func (r *guildRepo) Set(ctx context.Context, guild *model.Guild, ttl time.Duration) error {
 	guildJSON, err := json.Marshal(guild)
 	if err != nil {
 		return err
 	}
 
-	return r.rdb.Set(ctx, GuildKey(guildID), guildJSON, ttl).Err()
+	return r.rdb.Set(ctx, GuildKey(guild.GuildID), guildJSON, ttl).Err()
 }
 
 func (r *guildRepo) Get(ctx context.Context, guildID string) (*model.Guild, error) {
