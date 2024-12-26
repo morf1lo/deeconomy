@@ -8,11 +8,11 @@ type DiscordOAuth2Resp struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-type DiscordUserResp struct {
-	Message string `json:"message"`
-	User *discordgo.User `json:"user"`
-}
-
 type DiscordUserGuildsResp struct {
 	Guilds []*discordgo.Guild `json:"guilds"`
+}
+
+type DiscordError struct {
+	Message string `json:"message"`
+	Code int `json:"code"`
 }

@@ -32,12 +32,14 @@ func (r *userRepo) Create(ctx context.Context, user *model.User) (*model.User, e
 }
 
 func (r *userRepo) UpdateByID(ctx context.Context, id primitive.ObjectID, updates map[string]interface{}) error {
-	update := bson.M{}
-	if value, exists := updates["accessToken"]; exists {
-		update["accessToken"] = value
+	update := bson.M{
+		"$set": bson.M{},
 	}
-	if value, exists := updates["refreshToken"]; exists {
-		update["refreshToken"] = value
+	if value, exists := updates["discordAccessToken"]; exists {
+		update["$set"].(bson.M)["discordAccessToken"] = value
+	}
+	if value, exists := updates["discordRefreshToken"]; exists {
+		update["$set"].(bson.M)["discordRefreshToken"] = value
 	}
 
 	_, err := r.usersCollection.UpdateByID(ctx, id, update)
