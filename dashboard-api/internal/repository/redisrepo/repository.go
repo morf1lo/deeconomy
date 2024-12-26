@@ -10,6 +10,7 @@ import (
 
 type Default interface {
 	Set(ctx context.Context, key string, value interface{}, ttl time.Duration) error
+	SetJSON(ctx context.Context, key string, value interface{}, ttl time.Duration) error
 	Get(ctx context.Context, key string) *redis.StringCmd
 	Del(ctx context.Context, keys ...string) *redis.IntCmd
 }

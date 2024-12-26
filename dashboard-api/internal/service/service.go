@@ -16,7 +16,7 @@ type User interface {
 type Guild interface {
 	Create(ctx context.Context, guild *model.Guild) (*model.Guild, error)
 	FindByGuildID(ctx context.Context, guildID string) (*model.Guild, error)
-	FindUserGuilds(ctx context.Context, discordID string) ([]*discordgo.Guild, error)
+	FindUserGuilds(ctx context.Context, discordID string, accessToken string) ([]*discordgo.Guild, error)
 }
 
 type Service struct {

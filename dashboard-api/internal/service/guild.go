@@ -10,6 +10,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/morf1lo/deeconomy-bot-api/internal/model"
 	"github.com/morf1lo/deeconomy-bot-api/internal/repository"
+	"github.com/morf1lo/deeconomy-bot-api/internal/repository/redisrepo"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 )
@@ -60,7 +61,16 @@ func (s *guildService) FindByGuildID(ctx context.Context, guildID string) (*mode
 	return guild, nil
 }
 
-func (s *guildService) FindUserGuilds(ctx context.Context, accessToken string) ([]*discordgo.Guild, error) {
+func (s *guildService) FindUserGuilds(ctx context.Context, discordID string, accessToken string) ([]*discordgo.Guild, error) {
+	guildsCache, err := redisrepo.GetMany[discordgo.Guild](s.repo.Redis.Default, ctx, redisrepo.UserGuildsKey(discordID))
+	if err == nil {
+		return guildsCache, nil
+	}
+	if err != redis.Nil {
+		s.logger.Sugar().Errorf("failed to get cached user(%s) guilds: %s", discordID, err.Error())
+		return nil, errInternal
+	}
+
 	url := fmt.Sprintf("%s/users/@me/guilds", DISCORD_HOST)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -81,6 +91,11 @@ func (s *guildService) FindUserGuilds(ctx context.Context, accessToken string) (
 	var guilds []*discordgo.Guild
 	if err := json.NewDecoder(resp.Body).Decode(&guilds); err != nil {
 		s.logger.Sugar().Errorf("failed to decode response body: %s", err.Error())
+		return nil, errInternal
+	}
+
+	if err := s.repo.Redis.Default.SetJSON(ctx, redisrepo.UserGuildsKey(discordID), guilds, time.Hour * 3); err != nil {
+		s.logger.Sugar().Errorf("failed to set user(%s) guilds in Redis: %s", discordID, err.Error())
 		return nil, errInternal
 	}
 

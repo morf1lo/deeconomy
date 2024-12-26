@@ -17,6 +17,7 @@ import (
 	"github.com/morf1lo/deeconomy-bot-api/internal/lib"
 	"github.com/morf1lo/deeconomy-bot-api/internal/model"
 	"github.com/morf1lo/deeconomy-bot-api/internal/repository"
+	"github.com/morf1lo/deeconomy-bot-api/internal/repository/redisrepo"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
 )
@@ -132,6 +133,9 @@ func (s *userService) Authorize(ctx context.Context, discordCode string) (string
 		user = createdUser
 	}
 
+	user.DiscordAccessToken = oauth2Response.AccessToken
+	user.DiscordRefreshToken = oauth2Response.RefreshToken
+
 	userUpdates := map[string]interface{}{
 		"discordAccessToken": oauth2Response.AccessToken,
 		"discordRefreshToken": oauth2Response.RefreshToken,
@@ -144,16 +148,24 @@ func (s *userService) Authorize(ctx context.Context, discordCode string) (string
 	// Response tokens
 	accessTokenClaims := jwt.MapClaims{
 		"id": user.ID.String(),
+		"discordId": user.DiscordID,
+		"discordAccessToken": user.DiscordAccessToken,
 		"exp": time.Now().Add(time.Hour * 2).Unix(),
 	}
 	refreshTokenClaims := jwt.MapClaims{
 		"id": user.ID.String(),
 		"discordId": user.DiscordID,
+		"discordRefreshToken": user.DiscordRefreshToken,
 		"exp": time.Now().Add(time.Hour * 24 * 7).Unix(),
 	}
 	accessToken, refreshToken, err := lib.GenerateJWTPair(accessTokenClaims, refreshTokenClaims)
 	if err != nil {
 		s.logger.Sugar().Errorf("failed to generate jwt pair for user(%s): %s", userResponse.ID, err.Error())
+		return "", "", errInternal
+	}
+
+	if err := s.repo.Redis.Default.SetJSON(ctx, redisrepo.UserInfoKey(user.DiscordID), &userResponse, time.Hour * 3); err != nil {
+		s.logger.Sugar().Errorf("failed to set discord user(%s) info in Redis: %s", user.DiscordID, err.Error())
 		return "", "", errInternal
 	}
 

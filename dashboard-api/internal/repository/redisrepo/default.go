@@ -35,8 +35,25 @@ func (r *defaultRepo) Get(ctx context.Context, key string) *redis.StringCmd {
 	return r.rdb.Get(ctx, key)
 }
 
-func GetMany[T any](r *defaultRepo, ctx context.Context, key string) ([]*T, error) {
-	value, err := r.rdb.Get(ctx, key).Result()
+func Get[T any](r Default, ctx context.Context, key string) (*T, error) {
+	value, err := r.Get(ctx, key).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	var result T
+	if err := json.Unmarshal([]byte(value), &result); err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+func GetMany[T any](r Default, ctx context.Context, key string) ([]*T, error) {
+	value, err := r.Get(ctx, key).Result()
 	if err != nil {
 		if err == redis.Nil {
 			return nil, nil
