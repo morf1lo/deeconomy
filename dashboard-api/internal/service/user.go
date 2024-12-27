@@ -140,6 +140,7 @@ func (s *userService) RefreshTokens(ctx context.Context, refreshToken string) (s
 	if err != nil {
 		return "", "", ErrTokenIsNotValid
 	}
+	fmt.Println(decodedToken["discordRefreshToken"].(string))
 
 	revokeEndpoint := fmt.Sprintf("%s/oauth2/token/revoke", DISCORD_HOST)
 
@@ -154,8 +155,6 @@ func (s *userService) RefreshTokens(ctx context.Context, refreshToken string) (s
 		s.logger.Sugar().Errorf("failed to CREATE new request to REFRESH tokens: %s", err.Error())
 		return "", "", ErrInternal
 	}
-
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	revokeTokensResp, err := s.httpClient.Do(req)
 	if err != nil {

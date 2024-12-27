@@ -35,11 +35,13 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		{
 			oauth2.GET("/signin", h.oauth2SignIn)
 			oauth2.GET("/callback", h.oauth2Authorize)
+			oauth2.GET("/refresh", h.oauth2Refresh)
 		}
 
 		users := v1.Group("/users")
 		{
 			users.GET("/@me", h.AuthMiddleware, h.usersMe)
+			users.GET("/guilds", h.AuthMiddleware, h.usersGuilds)
 		}
 	}
 

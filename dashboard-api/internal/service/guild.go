@@ -79,7 +79,7 @@ func (s *guildService) FindUserGuilds(ctx context.Context, discordID string, acc
 		return nil, ErrInternal
 	}
 
-	req.Header.Add("Authotization", "Bearer " + accessToken)
+	req.Header.Add("Authorization", "Bearer " + accessToken)
 
 	resp, err := s.httpClient.Do(req)
 	if err != nil {
@@ -88,13 +88,20 @@ func (s *guildService) FindUserGuilds(ctx context.Context, discordID string, acc
 	}
 	defer resp.Body.Close()
 
-	var guilds []*discordgo.Guild
-	if err := json.NewDecoder(resp.Body).Decode(&guilds); err != nil {
+	var responseGuilds []*discordgo.Guild
+	if err := json.NewDecoder(resp.Body).Decode(&responseGuilds); err != nil {
 		s.logger.Sugar().Errorf("failed to decode response body: %s", err.Error())
 		return nil, ErrInternal
 	}
 
-	if err := s.repo.Redis.Default.SetJSON(ctx, redisrepo.UserGuildsKey(discordID), guilds, time.Hour * 3); err != nil {
+	guilds := []*discordgo.Guild{}
+	for _, guild := range responseGuilds {
+		if guild.Permissions&discordgo.PermissionManageServer != 0 {
+			guilds = append(guilds, guild)
+		}
+	}
+
+	if err := s.repo.Redis.Default.SetJSON(ctx, redisrepo.UserGuildsKey(discordID), guilds, time.Minute * 10); err != nil {
 		s.logger.Sugar().Errorf("failed to set user(%s) guilds in Redis: %s", discordID, err.Error())
 		return nil, ErrInternal
 	}

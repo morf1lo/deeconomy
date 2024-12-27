@@ -52,9 +52,6 @@ func Get[T any](r Default, ctx context.Context, key string) (*T, error) {
 func GetMany[T any](r Default, ctx context.Context, key string) ([]*T, error) {
 	value, err := r.Get(ctx, key).Result()
 	if err != nil {
-		if err == redis.Nil {
-			return nil, nil
-		}
 		return nil, err
 	}
 

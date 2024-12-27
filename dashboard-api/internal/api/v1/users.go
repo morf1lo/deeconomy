@@ -17,3 +17,15 @@ func (h *Handler) usersMe(c *gin.Context) {
 
 	c.JSON(http.StatusOK, *discordUser)
 }
+
+func (h *Handler) usersGuilds(c *gin.Context) {
+	user := h.getUser(c)
+
+	guilds, err := h.services.Guild.FindUserGuilds(c.Request.Context(), user.DiscordID, user.DiscordAccessToken)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, guilds)
+}
