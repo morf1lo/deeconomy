@@ -44,18 +44,18 @@ func (s *guildService) FindByGuildID(ctx context.Context, guildID string) (*mode
 	}
 	if err != redis.Nil {
 		s.logger.Sugar().Errorf("failed to GET CACHED value from Redis: %s", err.Error())
-		return nil, errInternal
+		return nil, ErrInternal
 	}
 
 	guild, err := s.repo.Mongo.Guild.FindByGuildID(ctx, guildID)
 	if err != nil {
 		s.logger.Sugar().Errorf("failed to find guild(%s): %s", guildID, err.Error())
-		return nil, errInternal
+		return nil, ErrInternal
 	}
 
 	if err := s.repo.Redis.Guild.Set(ctx, guild, time.Hour); err != nil {
 		s.logger.Sugar().Errorf("failed to SET guild(%s) in Redis: %s", guildID, err.Error())
-		return nil, errInternal
+		return nil, ErrInternal
 	}
 
 	return guild, nil
@@ -68,7 +68,7 @@ func (s *guildService) FindUserGuilds(ctx context.Context, discordID string, acc
 	}
 	if err != redis.Nil {
 		s.logger.Sugar().Errorf("failed to get cached user(%s) guilds: %s", discordID, err.Error())
-		return nil, errInternal
+		return nil, ErrInternal
 	}
 
 	url := fmt.Sprintf("%s/users/@me/guilds", DISCORD_HOST)
@@ -76,7 +76,7 @@ func (s *guildService) FindUserGuilds(ctx context.Context, discordID string, acc
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		s.logger.Sugar().Errorf("failed to CREATE request: %s", err.Error())
-		return nil, errInternal
+		return nil, ErrInternal
 	}
 
 	req.Header.Add("Authotization", "Bearer " + accessToken)
@@ -91,12 +91,12 @@ func (s *guildService) FindUserGuilds(ctx context.Context, discordID string, acc
 	var guilds []*discordgo.Guild
 	if err := json.NewDecoder(resp.Body).Decode(&guilds); err != nil {
 		s.logger.Sugar().Errorf("failed to decode response body: %s", err.Error())
-		return nil, errInternal
+		return nil, ErrInternal
 	}
 
 	if err := s.repo.Redis.Default.SetJSON(ctx, redisrepo.UserGuildsKey(discordID), guilds, time.Hour * 3); err != nil {
 		s.logger.Sugar().Errorf("failed to set user(%s) guilds in Redis: %s", discordID, err.Error())
-		return nil, errInternal
+		return nil, ErrInternal
 	}
 
 	if len(guilds) == 0 {

@@ -35,3 +35,21 @@ func (h *Handler) oauth2Authorize(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"ok": true, "accessToken": accessToken})
 }
+
+func (h *Handler) oauth2Refresh(c *gin.Context) {
+	refreshToken, err := c.Cookie("refreshToken")
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	newAccessToken, newRefreshToken, err := h.services.User.RefreshTokens(c.Request.Context(), refreshToken)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.SetCookie("refreshToken", newRefreshToken, 3600 * 24 * 7, "/", "localhost", true, true)
+
+	c.JSON(http.StatusOK, gin.H{"ok": true, "accessToken": newAccessToken})
+}

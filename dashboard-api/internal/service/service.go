@@ -6,11 +6,15 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/morf1lo/deeconomy-bot-api/internal/model"
 	"github.com/morf1lo/deeconomy-bot-api/internal/repository"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.uber.org/zap"
 )
 
 type User interface {
 	Authorize(ctx context.Context, discordCode string) (string, string, error)
+	RefreshTokens(ctx context.Context, refreshToken string) (string, string, error)
+	FindByID(ctx context.Context, id primitive.ObjectID) (*model.User, error)
+	FindDiscordUser(ctx context.Context, discordID string, discordAccessToken string, cacheEnable bool) (*discordgo.User, error)
 }
 
 type Guild interface {
